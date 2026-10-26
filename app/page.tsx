@@ -1,15 +1,40 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowDown, ArrowUpRight, Mail } from "lucide-react";
+import { ArrowDown, ArrowUpRight, Mail, X } from "lucide-react";
 import Stack from "./Stack";
 
-type WorkItem = { title: string; subtitle: string; code: string; tone: string; image?: string };
+type WorkDetail = { title: string; text: string };
+type WorkItem = { title: string; subtitle: string; code: string; tone: string; image?: string; url?: string; details?: WorkDetail[] };
 
 const work: WorkItem[] = [
-  { title: "SIP", subtitle: "Student Induction Portal", code: "01", tone: "lime" },
-  { title: "Moss + Algae", subtitle: "Digital Twin", code: "02", tone: "mint", image: "/moss-algae.webp" },
-  { title: "StitchSmart", subtitle: "Creative Technology", code: "03", tone: "lilac" },
+  {
+    title: "SIP", subtitle: "Student Induction Portal", code: "01", tone: "lime",
+    details: [
+      { title: "Tech Stack", text: "React.js, Vite, Tailwind CSS, shadcn/ui, Firebase, and Leaflet.js." },
+      { title: "Student Dashboard", text: "Designed and developed a responsive dashboard displaying induction schedules, announcements, and important updates." },
+      { title: "Personalized Venue Allocation", text: "Built an intuitive interface allowing students to easily access their assigned venues and activity schedules." },
+      { title: "Interactive Campus Navigation", text: "Integrated campus maps, event information, and organized navigation to help newcomers explore the college effortlessly." },
+    ],
+  },
+  {
+    title: "Moss + Algae", subtitle: "Digital Twin", code: "02", tone: "mint", image: "/moss-algae.webp", url: "https://mossalgae.vercel.app/",
+    details: [
+      { title: "Tech Stack", text: "Next.js, React, Tailwind CSS, Three.js, FastAPI, and Open-Meteo API." },
+      { title: "Interactive 3D Digital Twin", text: "Designed an immersive 3D city visualization to explore air pollution and simulate biofilter deployment." },
+      { title: "Air Quality Dashboard", text: "Built interactive AQI maps, pollution graphs, real-time data visualizations, and 72-hour forecasting interfaces." },
+      { title: "Smart Planning UI", text: "Developed deployment optimization, cost comparison, economic forecasting, and Eco/Boost operating-mode simulation interfaces." },
+    ],
+  },
+  {
+    title: "StitchSmart", subtitle: "Creative Technology", code: "03", tone: "lilac",
+    details: [
+      { title: "Tech Stack", text: "Next.js, React, FastAPI, Python, OpenCV, MediaPipe, and rembg." },
+      { title: "Smart Tailoring Platform", text: "Developed a collaborative AI-powered solution to simplify garment customization and tailoring workflows." },
+      { title: "Frontend Contribution", text: "Contributed to the web interface and integration of application features, focusing on usability and user interaction." },
+      { title: "Computer Vision Integration", text: "Worked on image-processing functionality for garment visualization, background removal, and privacy-conscious processing." },
+    ],
+  },
 ];
 
 const cubeFaces = [
@@ -69,9 +94,37 @@ function WorkCard({ project }: { project: WorkItem }) {
   );
 }
 
+function ProjectModal({ index, onClose }: { index: number; onClose: () => void }) {
+  const project = work[index];
+  useEffect(() => {
+    const closeWithEscape = (event: KeyboardEvent) => event.key === "Escape" && onClose();
+    document.addEventListener("keydown", closeWithEscape);
+    document.body.style.overflow = "hidden";
+    return () => { document.removeEventListener("keydown", closeWithEscape); document.body.style.overflow = ""; };
+  }, [onClose]);
+
+  return (
+    <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
+      <article className={`project-modal ${project.tone}`} role="dialog" aria-modal="true" aria-labelledby="project-title">
+        <button className="modal-close" onClick={onClose} aria-label="Close project details"><X size={22} /></button>
+        <span className="modal-number">PROJECT {project.code}</span>
+        <h2 id="project-title">{project.title}</h2>
+        <p>{project.subtitle}</p>
+        {project.details ? (
+          <ol className="project-details">
+            {project.details.map((detail) => <li key={detail.title}><strong>{detail.title}</strong><span>{detail.text}</span></li>)}
+          </ol>
+        ) : <div className="empty-project-space" aria-label="Project details to be added" />}
+        {project.url && <a className="project-live-link" href={project.url} target="_blank" rel="noreferrer">Visit live website <ArrowUpRight size={18} /></a>}
+      </article>
+    </div>
+  );
+}
+
 export default function Home() {
   const [showIntro, setShowIntro] = useState(true);
   const [landingVisible, setLandingVisible] = useState(false);
+  const [selectedWork, setSelectedWork] = useState<number | null>(null);
   const cards = work.map((project) => <WorkCard key={project.title} project={project} />);
 
   return (
@@ -106,7 +159,7 @@ export default function Home() {
           <h2>THINGS I HAVE<br /><em>WORKED ON.</em></h2>
         </div>
         <div className="stack-wrap">
-          <Stack layout="fan" cards={cards} />
+          <Stack layout="fan" cards={cards} onCardClick={setSelectedWork} />
         </div>
       </section>
 
@@ -128,6 +181,7 @@ export default function Home() {
         <footer><span>&copy; 2026 Sneha V. All Rights Reserved.</span></footer>
       </section>
 
+      {selectedWork !== null && <ProjectModal index={selectedWork} onClose={() => setSelectedWork(null)} />}
       </div>
     </main>
   );
