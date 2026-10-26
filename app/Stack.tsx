@@ -5,15 +5,14 @@ import { type ReactNode, useState } from "react";
 type StackProps = {
   cards: ReactNode[];
   layout?: "fan";
-  onCardClick?: (index: number) => void;
 };
 
-export default function Stack({ cards, onCardClick }: StackProps) {
+export default function Stack({ cards }: StackProps) {
   const [order, setOrder] = useState(() => cards.map((_, index) => index));
 
   const selectCard = (cardIndex: number, position: number) => {
     if (position === 0) {
-      onCardClick?.(cardIndex);
+      setOrder((current) => [...current.slice(1), current[0]]);
       return;
     }
 
@@ -31,7 +30,7 @@ export default function Stack({ cards, onCardClick }: StackProps) {
             transform: `translateX(${position * 17}px) translateY(${position * 15}px) rotate(${(position - 1) * 4.5}deg)`,
           }}
           onClick={() => selectCard(cardIndex, position)}
-          aria-label={position === 0 ? `Open project ${cardIndex + 1}` : `Bring project ${cardIndex + 1} to front`}
+          aria-label={position === 0 ? `Move project ${cardIndex + 1} to the back` : `Bring project ${cardIndex + 1} to front`}
         >
           {cards[cardIndex]}
         </button>
